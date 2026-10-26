@@ -40,13 +40,13 @@ Install the runner once, then run any example straight from its URL in an empty 
 npm install -g @lmctl-ai/lmctl
 
 # Planck spectra of three stars with the visible band marked (lmplot)
-lmctl autorun https://raw.githubusercontent.com/lmctl-ai/lmplot/main/examples/blackbody_planck.lms
+lmctl https://raw.githubusercontent.com/lmctl-ai/lmplot/main/examples/blackbody_planck.lms
 
 # Von Karman vortex street behind a cylinder (lmfluid, drawn by lmplot)
-lmctl autorun https://raw.githubusercontent.com/lmctl-ai/lmfluid/main/examples/cylinder_wake.lms
+lmctl https://raw.githubusercontent.com/lmctl-ai/lmfluid/main/examples/cylinder_wake.lms
 
 # Damped oscillator dashboard: lmnum integrates, lmplot draws (lmgallery)
-lmctl autorun https://raw.githubusercontent.com/lmctl-ai/lmgallery/main/examples/01-oscillator-ode-plot.lms
+lmctl https://raw.githubusercontent.com/lmctl-ai/lmgallery/main/examples/01-oscillator-ode-plot.lms
 ```
 
 ## How it works
