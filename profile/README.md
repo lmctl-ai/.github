@@ -51,7 +51,7 @@ lmctl https://raw.githubusercontent.com/lmctl-ai/lmgallery/main/examples/01-osci
 
 ## How it works
 
-- An lmscript program binds a host in a `_dsl_` block: `p = _dsl_ cli="lmplot" install="github:lmctl-ai/lmplot@latest";`. The block's body is compiled against the schema embedded in the host binary (`lmplot --dsl-schema`), so mistakes are reported before anything runs.
+- An lmscript program binds a host in a `_dsl_` block: `p = _dsl_ cli="lmplot" install="github:lmctl-ai/lmplot@latest";`. The block's body is compiled against the schema embedded in the host binary (`lmplot --lmcode-schema`), so mistakes are reported before anything runs.
 - Each host is one static executable per platform (linux-x64, linux-arm64, macos-arm64, macos-x64, windows-x64) with nothing to install beside it; `install="…@latest"` fetches the newest release on first use.
 - One program can bind several hosts, so a simulation host computes and a drawing host (lmplot, lmdraw, lmcad, lmblender) turns the result into a picture. [lmgallery](https://github.com/lmctl-ai/lmgallery) collects such compositions and runs every one of them in CI.
 
