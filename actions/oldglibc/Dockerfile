@@ -4,7 +4,8 @@
 ARG IMAGE=quay.io/pypa/manylinux_2_28_x86_64
 FROM ${IMAGE}
 ARG LMCTL_VERSION=
-RUN dnf install -y perl-core xz curl ca-certificates python3 make && dnf clean all
+# glibc-static: some test suites link a fully static program to prove their linkage checks reject it.
+RUN dnf install -y perl-core xz curl ca-certificates python3 make glibc-static && dnf clean all
 # Node (checksum verified) to run the lmscript compiler the tests use.
 RUN case "$(uname -m)" in x86_64) N=x64;; aarch64) N=arm64;; *) exit 1;; esac \
  && cd /tmp && curl -fsSLO https://nodejs.org/dist/latest-v24.x/SHASUMS256.txt \
