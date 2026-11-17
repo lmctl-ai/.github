@@ -1,0 +1,66 @@
+name: Old-glibc Linux build
+description: >
+  Run a command inside a manylinux_2_28 image (glibc 2.28) with the workspace mounted at its host path,
+  then gate the glibc floor of the binaries it produced. Use for the Linux jobs of release builds.
+inputs:
+  run:
+    description: Shell command to run inside the image, from working-directory.
+    required: true
+  check:
+    description: Space-separated ELF paths or globs (relative to working-directory) whose glibc floor is gated after the command.
+    default: ''
+  max-glibc:
+    description: Highest glibc symbol version a checked binary may need.
+    default: '2.28'
+  lmctl-version:
+    description: "@lmctl-ai/lmctl version to install in the image (provides lmscript); empty installs nothing."
+    default: ''
+  env:
+    description: Names (one per line) of environment variables to pass into the container.
+    default: ''
+  working-directory:
+    description: Directory inside the workspace to run in.
+    default: '.'
+  timeout-minutes:
+    description: Limit for the container run.
+    default: '90'
+runs:
+  using: composite
+  steps:
+    - name: Build the old-glibc image
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        LMCTL_VERSION: ${{ inputs.lmctl-version }}
+      run: |
+        set -euo pipefail
+        arch=x86_64; [ "$RUNNER_ARCH" = ARM64 ] && arch=aarch64
+        docker build -t oldglibc \
+          --build-arg "IMAGE=quay.io/pypa/manylinux_2_28_${arch}" \
+          --build-arg "LMCTL_VERSION=${LMCTL_VERSION}" \
+          -f "$ACTION_PATH/Dockerfile" "$ACTION_PATH"
+    - name: Run inside the image
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        RUN_CMD: ${{ inputs.run }}
+        CHECK_PATHS: ${{ inputs.check }}
+        MAX_GLIBC: ${{ inputs.max-glibc }}
+        ENV_NAMES: ${{ inputs.env }}
+        WORKDIR: ${{ inputs.working-directory }}
+        TIMEOUT_MIN: ${{ inputs.timeout-minutes }}
+      run: |
+        set -euo pipefail
+        # The workspace is mounted at its host path so recorded absolute paths (CMake caches, caches) stay valid.
+        args=(--rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e CI -e GITHUB_ACTIONS
+              -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -v "$ACTION_PATH:/oldglibc:ro"
+              -w "$GITHUB_WORKSPACE/$WORKDIR" -e OLDGLIBC_MAX="$MAX_GLIBC" -e OLDGLIBC_CHECK="$CHECK_PATHS")
+        while IFS= read -r name; do
+          name="${name//[[:space:]]/}"
+          [ -n "$name" ] && args+=(-e "$name")
+        done <<< "$ENV_NAMES"
+        script="$RUN_CMD"
+        if [ -n "$CHECK_PATHS" ]; then
+          script+=$'\n''python3 /oldglibc/check-glibc.py --max "$OLDGLIBC_MAX" $OLDGLIBC_CHECK'
+        fi
+        timeout "${TIMEOUT_MIN}m" docker run "${args[@]}" oldglibc bash -euo pipefail -c "$script"
